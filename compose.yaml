@@ -1,0 +1,116 @@
+services:
+  # Base de données MySQL
+  mysql:
+    image: mysql:8.0
+    container_name: turbo_mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: 123
+      MYSQL_DATABASE: emp
+      MYSQL_USER: emp
+      MYSQL_PASSWORD: emp
+    ports:
+      - "3308:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - turbo_network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
+
+  # phpMyAdmin pour gérer la base de données
+  phpmyadmin:
+    image: phpmyadmin:latest
+    container_name: turbo_phpmyadmin
+    restart: unless-stopped
+    environment:
+      PMA_HOST: mysql
+      PMA_PORT: 3306
+      PMA_USER: emp
+      PMA_PASSWORD: emp
+    ports:
+      - "8080:80"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - turbo_network
+
+  # Backend NestJS
+  nest_backend:
+    build:
+      context: .
+      dockerfile: docker/nest/Dockerfile
+    container_name: turbo_nest
+    restart: unless-stopped
+    environment:
+      NODE_ENV: development
+      DATABASE_HOST: mysql
+      DATABASE_PORT: 3306
+      DATABASE_USER: emp
+      DATABASE_PASSWORD: emp
+      DATABASE_NAME: emp
+      PORT: 9300
+    ports:
+      - "9300:9300"
+    volumes:
+      - .:/app
+      - /app/node_modules
+      - /app/apps/nest/node_modules
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - turbo_network
+
+  # Frontend Nuxt4
+  nuxt_frontend:
+    build:
+      context: .
+      dockerfile: docker/nuxt/Dockerfile
+    container_name: turbo_nuxt
+    restart: unless-stopped
+    environment:
+      NODE_ENV: development
+      NUXT_PUBLIC_GRAPHQL_ENDPOINT: http://nest_backend:9300/graphql
+      PORT: 5300
+      HOST: 0.0.0.0
+    ports:
+      - "5300:5300"
+      - "24678:24678"
+    volumes:
+      - .:/app
+      - /app/node_modules
+      - /app/apps/nuxt/node_modules
+      - /app/apps/nuxt/.nuxt
+    networks:
+      - turbo_network
+
+  # Serveur web Caddy avec reverse proxy
+  caddy:
+    image: caddy:2-alpine
+    container_name: turbo_caddy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./docker/Caddyfile:/etc/caddy/Caddyfile
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - nest_backend
+      - nuxt_frontend
+    networks:
+      - turbo_network
+
+networks:
+  turbo_network:
+    driver: bridge
+
+volumes:
+  mysql_data:
+  caddy_data:
+  caddy_config:

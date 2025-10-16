@@ -1,0 +1,30 @@
+{
+    auto_https off
+}
+
+localhost {
+    # Backend NestJS (GraphQL ou REST)
+    handle /graphql {
+        reverse_proxy nest_backend:9300
+    }
+
+    # Frontend Nuxt4
+    handle /* {
+        reverse_proxy nuxt_frontend:5300 {
+            header_up Host {host}
+            header_up X-Real-IP {remote}
+            header_up X-Forwarded-For {remote}
+            header_up X-Forwarded-Proto {scheme}
+
+            # Support WebSocket (hot reload Nuxt)
+            header_up Connection {>Connection}
+            header_up Upgrade {>Upgrade}
+        }
+    }
+
+    log {
+        output stdout
+        format console
+        level INFO
+    }
+}

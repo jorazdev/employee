@@ -1,0 +1,90 @@
+# ------------------------------------------------------
+# THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
+# ------------------------------------------------------
+
+type Absence {
+  employee: Employee!
+  endDate: String!
+  id: ID!
+  reason: String
+  startDate: String!
+}
+
+type AbsenceEmployeOutput {
+  abscenceId: String!
+  endDate: String!
+  firstName: String!
+  lastName: String!
+  personnelNumber: String!
+  startDate: String!
+}
+
+type Employee {
+  absences: [Absence!]
+  firstName: String!
+  id: ID!
+  lastName: String!
+  personnelNumber: String!
+}
+
+input LoginInput {
+  email: String!
+  password: String!
+}
+
+type LoginResponse {
+  access_token: String!
+}
+
+type Mutation {
+  login(input: LoginInput!): LoginResponse!
+  register(input: SignInput!): SignOutput!
+  updateAbsence(updateAbsInput: UpdateAbsInput!): Absence!
+  updateAbsenceEmployee(updateAbsInput: UpdateAbsEmpInput!): AbsenceEmployeOutput!
+  updateEmployee(UpdateEmpInput: UpdateEmpInput!): Employee!
+}
+
+type Query {
+  absences: [Absence!]!
+  employees: [Employee!]!
+  employesAbsences: [AbsenceEmployeOutput!]!
+  hello(name: String!): String!
+}
+
+input SignInput {
+  avatarUrl: String!
+  email: String!
+  firstName: String!
+  id: Int!
+  lastName: String!
+  password: String!
+}
+
+type SignOutput {
+  avatarUrl: String!
+  email: String!
+  firstName: String!
+  id: Int!
+  lastName: String!
+}
+
+input UpdateAbsEmpInput {
+  abscenceId: String!
+  endDate: String!
+  firstName: String!
+  lastName: String!
+  startDate: String!
+}
+
+input UpdateAbsInput {
+  employeeId: String!
+  endDate: String!
+  reason: String!
+  startDate: String!
+}
+
+input UpdateEmpInput {
+  firstName: String!
+  lastName: String!
+  personnelNumber: String!
+}
